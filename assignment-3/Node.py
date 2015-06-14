@@ -7,6 +7,7 @@
 # Copyright 2015 Sean Donovan
 
 from helpers import *
+import pdb
 
 class Node(object):
     #TODO: You need to have a structure that contains current distances
@@ -23,6 +24,9 @@ class Node(object):
         self.topology = topolink
         self.messages = []
         #TODO? You may need to initialize your distance data structure
+        self.distance_table = {name: 0}
+        neighbor_distances = {n: 1 for n in neighbors}
+        self.distance_table.update(neighbor_distances) 
 
     def __len__(self):
         ''' Returns the length of the message queue. '''
@@ -31,17 +35,12 @@ class Node(object):
     def __str__(self):
         ''' Returns a string representation of the node. '''
         #TODO? You may want to edit this with your distance info.
-
-        retstr = self.name + " : links ( "
-        for neighbor in self.links:
-            retstr = retstr + neighbor + " "
-        return retstr + ")"
-        
+        distance_info = sorted([node + str(dist) for node, dist in self.distance_table.items()])
+        distance_info = ','.join(distance_info)
+        return '{0}:{1}'.format(self.name, distance_info)
 
     def __repr__(self):
         return self.__str__()
-
-        
 
     def verify_neighbors(self):
         ''' Verify that all your neighbors has a backlink to you. '''
@@ -55,14 +54,12 @@ class Node(object):
         '''
         if dest not in self.links:
             raise Exception("Neighbor " + dest + " not part of neighbors of " + self.name)
-        
         self.topology.topodict[dest].queue_msg(msg)
-        
 
     def queue_msg(self, msg):
         ''' Allows neighbors running Bellman-Ford to send you a message, to be
             processed next time through self.process_BF(). '''
-        self.messages.append(msg)
+        self.messages.append(msg.copy())
 
     def process_BF(self):
         # TODO: The Bellman-Ford algorithm needs to be implemented here.
@@ -70,15 +67,45 @@ class Node(object):
         # 2. Send neighbors updated distances
 
         # Process queue:
+        print '===================================='
+        print "Node {0} is processing messages".format(self.name)
+        print "Current distance table:{0}".format(self.distance_table)
+        send_updates = False
         for msg in self.messages:
             # TODO: Do something
-            pass
+            # pdb.set_trace()
+            msg.pop(self.name)
+            # Who is the message from?
+            sender, dist = [(node, dist) for node, dist in msg.items() if dist == 0][0]
+            msg.pop(sender)
+            # This message is from a neighbor node, which by definition is 1-unit away. 
+            # we could get variable distances by doing self.distance_table[sender]
+            assert self.distance_table[sender] == 1
+            # msg = {node: dist + 1 for node, dist in msg}
+            for node in msg:
+                msg[node] += 1
+
+            print '------------------------'
+            print "{1} message: {0}".format(msg, sender)
+            for node, distance in msg.items():
+                current_dist = self.distance_table.get(node, float('inf'))
+                print "{sender}->{node}:{distance}, {self.name}->{node}:{current_dist}".format(**locals())
+                if distance < current_dist:
+                    print "Updating to use node {0}:{1}".format(node, distance)
+                    send_updates = True
+                    self.distance_table[node] = distance
+                else:
+                    print 'Current distance is shorter'
+
         # Empty queue
         self.messages = []
 
         # Send neighbors udpated distances:
-        pass
-            
+        if send_updates:
+            for neighbor in self.links:
+                # self.distance_table
+                print "sending {0} updated distance table: {1}".format(neighbor, self.distance_table)
+                self.send_msg(self.distance_table, neighbor)
 
     def log_distances(self):
         ''' Prints distances in the following format (no whitespace either end):
@@ -90,10 +117,8 @@ class Node(object):
         '''
         # TODO: The string in the format above (no newlines, no whitepsace) must
         # be defined. THen log with write_entry, example below.
-        logstring = "A:A0,B1,C2"
+        logstring = str(self)
         write_entry(logstring)
-        pass
-
 
 
 class Topology(object):
@@ -147,11 +172,11 @@ class Topology(object):
         for node in self.nodes:
             for neighbor in node.links:
                 # TODO - Build message
-                msg = None
-
+                msg = node.distance_table
+                print "Node {0} sending message to neighbor {1}".format(node.name, neighbor)
+                # pdb.set_trace()
                 # Send message to neighbor
                 node.send_msg(msg, neighbor)
-
 
         done = False
         while done == False:
@@ -159,7 +184,6 @@ class Topology(object):
                 node.process_BF()
                 node.log_distances()
             
-
             # Log a break.
             next_entry()
 
