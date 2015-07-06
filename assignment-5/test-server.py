@@ -14,6 +14,7 @@ if not (len(sys.argv) == 3):
     print "    python test-server.py <server-ip> <port>"
     print "  server-ip is the IP address of the server - use ifconfig to find."
     print "  port is the TCP port to open a socket on."
+    exit()
 
 
 # Create a TCP/IP socket
