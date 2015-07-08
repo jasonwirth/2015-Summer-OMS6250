@@ -13,6 +13,7 @@ if not (len(sys.argv) == 3):
     print "    python test-client.py <server-ip> <port>"
     print "  server-ip is the IP address running the server."
     print "  port is the TCP port that the server is running."
+    exit()
 
 
 # Create a TCP/IP socket
