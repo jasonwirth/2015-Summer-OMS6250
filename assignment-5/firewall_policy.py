@@ -43,9 +43,10 @@ def make_firewall_policy(config):
 
         return entry
 
-    for entry in config:
+    for i, entry in enumerate(config):
         # TODO - build the individual rules
         entry = convert(entry)
+        pp('============== CONFIG {0} ==============='.format(i))
         pp(entry)
         rule = match(**entry)
 

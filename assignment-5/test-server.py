@@ -23,6 +23,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Bind the socket to the port
 server_address = (sys.argv[1], int(sys.argv[2]))
 print >>sys.stderr, 'starting up on %s port %s' % server_address
+server_str = '{0} {1}'.format(*server_address)
 sock.bind(server_address)
 
 # Listen for incoming connections
@@ -32,19 +33,19 @@ while True:
     # Wait for a connection
     print >>sys.stderr, 'waiting for a connection'
     connection, client_address = sock.accept()
-
+    client_str = '{0} {1}'.format(*client_address) 
     try:
-        print >>sys.stderr, 'connection from', client_address
+        print >>sys.stderr, '[{server_str}] connection from {client_str}'.format(**locals())
 
         # Receive the data in small chunks and retransmit it
         while True:
             data = connection.recv(16)
-            print >>sys.stderr, '[{0} {1}] received from client [{2} {3}]: "{4}"'.format(server_address[0], server_address[1], client_address[0], client_address[1], data)
+            print >>sys.stderr, '[{server_str}] received {client_str} "{data}"'.format(**locals())
             if data:
-                print >>sys.stderr, '[{0} {1}] sending data back to the client [{2} {3}]'.format(server_address[0], server_address[1], client_address[0], client_address[1])
+                print >>sys.stderr, '[{server_str}] sending data back to the client {client_str}'.format(**locals())
                 connection.sendall(data)
             else:
-                print >>sys.stderr, 'no more data from', client_address
+                print >>sys.stderr, '[{server_str}] no more data from {client_str}'.format(**locals())
                 break
             
     finally:

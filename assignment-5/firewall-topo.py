@@ -47,6 +47,8 @@ class FWTopo(Topo):
         self.addLink(s1, w2, port1=5, port2=1, **lconfig)
         self.addLink(s1, w3, port1=6, port2=1, **lconfig)
 
+topos = { 'FWTopo': ( lambda: FWTopo() ) }
+
 
 def main():
     print "Starting topology"
