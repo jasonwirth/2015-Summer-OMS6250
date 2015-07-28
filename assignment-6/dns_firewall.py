@@ -47,9 +47,8 @@ def dns_firewall(pkt):
     # This assignment:
 
     # This is the Query flag. True = response. False = query
-    query_flag = dns_parsed.qr
-    response = query_flag
-    query = not query_flag
+    query_response = dns_parsed.qr
+    query = not query_response
     dns_type = 'query' if query else "response"
 
     # This is the transaction ID, which is how responses and requests can be
@@ -62,7 +61,7 @@ def dns_firewall(pkt):
     # print msg
     # _print(msg)
     # return pkt
-    if response:
+    if query_response:
         if transaction_ID not in seen_queries:
             # print 'no query for packet', transaction_ID
             return None
